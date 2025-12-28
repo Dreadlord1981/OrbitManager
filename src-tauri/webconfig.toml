@@ -1,0 +1,16 @@
+[server]
+name = "Local test"
+address="127.0.0.1"
+port=7701
+https= false
+
+[[server.headers]]
+key="Service-Worker-Allowed"
+value="/"
+
+[[server.route]]
+path="/api"
+
+[[server.route]]
+path="/static"
+ifs="./"
