@@ -7,10 +7,11 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
         // Handle autostart plugin
-        .plugin(tauri_plugin_autostart::init(
-            tauri_plugin_autostart::MacosLauncher::LaunchAgent,
-            Some(vec!["--autostart"]),
-        ))
+        .plugin(
+            tauri_plugin_autostart::Builder::new()
+                .app_name("OrbitManager")
+                .build(),
+        )
         .manage(manager::ManagerState::new())
         .setup(|app| {
             // Read settings to check start_hidden
