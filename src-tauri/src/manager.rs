@@ -157,17 +157,21 @@ pub async fn save_app_settings<R: Runtime>(
     Ok(())
 }
 
-fn get_log_path(config: &ServerConfig) -> PathBuf {
-    let expanded_path = expand_path(&config.path);
-    let server_path = PathBuf::from(&expanded_path);
-    if server_path.extension().is_some() {
-        server_path
-            .parent()
-            .unwrap_or(&PathBuf::from("."))
-            .join("orbit_server.log")
-    } else {
-        server_path.join("orbit_server.log")
-    }
+fn get_log_path<R: Runtime>(config: &ServerConfig, app: &AppHandle<R>) -> PathBuf {
+
+	let data_dir = app.path().data_dir().unwrap();
+
+	let server_id = &config.id;
+
+	let server_path = data_dir.join(server_id);
+
+	let file_path = server_path.join("orbit_sever.log");
+
+	if !file_path.exists() {
+		let _ = fs::create_dir_all(&file_path);
+	}
+
+	file_path
 }
 
 fn get_config_full_path(config: &ServerConfig) -> PathBuf {
@@ -378,7 +382,7 @@ pub async fn start_server<R: Runtime>(
     let id_clone = id.clone();
     let app_handle = app.clone();
 
-    let log_path = get_log_path(config);
+    let log_path = get_log_path(config, &app);
     let log_path_err = log_path.clone();
 
     thread::spawn(move || {
@@ -470,7 +474,7 @@ pub async fn get_log_history<R: Runtime>(
         .iter()
         .find(|s| s.id == id)
         .ok_or("Server not found")?;
-    let log_path = get_log_path(config);
+    let log_path = get_log_path(config, &app);
 
     if !log_path.exists() {
         return Ok(Vec::new());
@@ -512,7 +516,7 @@ pub async fn clear_logs<R: Runtime>(app: AppHandle<R>, id: String) -> Result<(),
         .iter()
         .find(|s| s.id == id)
         .ok_or("Server not found")?;
-    let log_path = get_log_path(config);
+    let log_path = get_log_path(config, &app);
 
     if log_path.exists() {
         fs::remove_file(log_path).map_err(|e| e.to_string())?;
