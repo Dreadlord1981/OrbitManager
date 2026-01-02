@@ -459,8 +459,10 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "145052bdd345b87320e369255277e3fb5152762ad123a901ef5c262dd38fe8d2"
 dependencies = [
  "iana-time-zone",
+ "js-sys",
  "num-traits",
  "serde",
+ "wasm-bindgen",
  "windows-link 0.2.1",
 ]
 
@@ -2381,6 +2383,7 @@ checksum = "04744f49eae99ab78e0d5c0b603ab218f515ea8cfe5a456d7629ad883a3b6e7d"
 name = "orbit-manager"
 version = "0.1.0"
 dependencies = [
+ "chrono",
  "expand-env-vars",
  "regex",
  "serde",
@@ -2390,7 +2393,7 @@ dependencies = [
  "tauri-build",
  "tauri-plugin-autostart",
  "tauri-plugin-opener",
- "toml 0.8.2",
+ "toml 0.9.10+spec-1.1.0",
  "uuid",
 ]
 

@@ -1,3 +1,4 @@
+use chrono::Local;
 use expand_env_vars::expand_env_vars;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
@@ -111,11 +112,19 @@ fn ensure_defaults<R: Runtime>(app: &AppHandle<R>, config: &ServerConfig) -> std
 
 // Persistence Helper
 fn get_config_path<R: Runtime>(app: &AppHandle<R>) -> PathBuf {
-    app.path().app_data_dir().unwrap().join("servers.json")
+    let data_dir = app.path().app_data_dir().unwrap();
+
+    let orbit_path = data_dir.join("OrbitManager");
+
+    orbit_path.join("servers.json")
 }
 
 pub fn get_settings_path<R: Runtime>(app: &AppHandle<R>) -> PathBuf {
-    app.path().app_data_dir().unwrap().join("settings.json")
+    let data_dir = app.path().app_data_dir().unwrap();
+
+    let orbit_path = data_dir.join("OrbitManager");
+
+    orbit_path.join("settings.json")
 }
 
 #[tauri::command]
@@ -158,20 +167,23 @@ pub async fn save_app_settings<R: Runtime>(
 }
 
 fn get_log_path<R: Runtime>(config: &ServerConfig, app: &AppHandle<R>) -> PathBuf {
+    let data_dir = app.path().data_dir().unwrap();
 
-	let data_dir = app.path().data_dir().unwrap();
+    let server_name = &config.name;
 
-	let server_id = &config.id;
+    let orbit_path = data_dir.join("OrbitManager");
 
-	let server_path = data_dir.join(server_id);
+    let mut server_path = orbit_path.join(server_name);
 
-	let file_path = server_path.join("orbit_sever.log");
+    let time_path = Local::now().format("%Y-%m-%d").to_string();
 
-	if !file_path.exists() {
-		let _ = fs::create_dir_all(&file_path);
-	}
+    server_path.push(time_path);
 
-	file_path
+    if !server_path.exists() {
+        let _ = fs::create_dir_all(&server_path);
+    }
+
+    server_path.join("orbit_sever.log")
 }
 
 fn get_config_full_path(config: &ServerConfig) -> PathBuf {
