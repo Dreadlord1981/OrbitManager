@@ -5,14 +5,8 @@
 			"name": "Debug Tauri App",
 			"type": "lldb",
 			"request": "launch",
-			"cargo": {
-				"args": [
-					"build",
-					"--manifest-path=./src-tauri/Cargo.toml",
-					"--no-default-features"
-				]
-			},
-			"preLaunchTask": "ui:dev"
+			"program": "${workspaceFolder}/src-tauri/target/debug/orbit-manager.exe",
+			"preLaunchTask": "build-debug"
 		}
 	]
 }

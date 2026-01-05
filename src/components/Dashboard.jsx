@@ -102,82 +102,84 @@ export default function Dashboard({ onAdd, onEdit, onCopy, onViewLogs, onEditCon
 	};
 
 	return (
-		<div className="view-content">
-			<div className="server-list">
-				<div className="list-header">
-					<h2>Servers</h2>
-					{servers.length > 0 && (
-						<button className="btn btn-primary" onClick={onAdd}>+ Add Server</button>
-					)}
-				</div>
-
-				{servers.length === 0 && (
-					<div className="empty-state">
-						<h3>No Servers Configured</h3>
-						<p>Get started by adding your first server.</p>
-						<button className="btn btn-primary" onClick={onAdd}>+ Add Server</button>
-					</div>
+		<div className="view-container">
+			<div className="view-header">
+				<h2>Servers</h2>
+				{servers.length > 0 && (
+					<button className="btn btn-primary" onClick={onAdd}>+ Add Server</button>
 				)}
+			</div>
 
-				{servers.map((server) => (
-					<div key={server.id} className="server-card">
-						<div className="server-info">
-							<div className="server-name">
-								<span className={`status-indicator ${server.running ? 'status-running' : 'status-stopped'}`}
-									title={server.running ? "Running" : "Stopped"} />
-								{server.name}
-							</div>
-							<div className="server-details">{server.path}</div>
-							{server.running && server.address && server.address !== "—" && (
-								<div className="server-details" style={{ opacity: 0.85, color: 'var(--success-color)' }}>
-									🌐 {server.address}
+			<div className="view-content">
+				<div className="server-list">
+					{servers.length === 0 && (
+						<div className="empty-state">
+							<h3>No Servers Configured</h3>
+							<p>Get started by adding your first server.</p>
+							<button className="btn btn-primary" onClick={onAdd}>+ Add Server</button>
+						</div>
+					)}
+
+					{servers.map((server) => (
+						<div key={server.id} className="server-card">
+							<div className="server-info">
+								<div className="server-name">
+									<span className={`status-indicator ${server.running ? 'status-running' : 'status-stopped'}`}
+										title={server.running ? "Running" : "Stopped"} />
+									{server.name}
 								</div>
-							)}
-							<div className="server-details" style={{ opacity: 0.7 }}>Config: {server.config_path}</div>
-						</div>
+								<div className="server-details">{server.path}</div>
+								{server.running && server.address && server.address !== "—" && (
+									<div className="server-details" style={{ opacity: 0.85, color: 'var(--success-color)' }}>
+										🌐 {server.address}
+									</div>
+								)}
+								<div className="server-details" style={{ opacity: 0.7 }}>Config: {server.config_path}</div>
+							</div>
 
-						<div className="card-actions">
-							{!server.running ? (
-								<button className="btn" onClick={() => handleStart(server.id)} title="Start">
-									▶️
+							<div className="card-actions">
+								{!server.running ? (
+									<button className="btn" onClick={() => handleStart(server.id)} title="Start">
+										▶️
+									</button>
+								) : (
+									<button className="btn" onClick={() => handleStop(server.id)} title="Stop">
+										⏹️
+									</button>
+								)}
+
+								<button
+									className="btn"
+									onClick={() => handleOpenBrowser(server.id)}
+									title={server.running ? "Open in Browser" : "Server must be running"}
+									disabled={!server.running}
+								>
+									🌐
 								</button>
-							) : (
-								<button className="btn" onClick={() => handleStop(server.id)} title="Stop">
-									⏹️
+
+								<button className="btn" onClick={() => onViewLogs(server)} title="Logs">
+									📄
 								</button>
-							)}
 
-							<button
-								className="btn"
-								onClick={() => handleOpenBrowser(server.id)}
-								title={server.running ? "Open in Browser" : "Server must be running"}
-								disabled={!server.running}
-							>
-								🌐
-							</button>
-
-							<button className="btn" onClick={() => onViewLogs(server)} title="Logs">
-								📄
-							</button>
-
-							<button className="btn" onClick={() => onEdit(server)} title="Edit Configuration">
-								✏️
-							</button>
-							<button className="btn" onClick={() => onEditConfig(server)} title="Edit Config File">
-								📝
-							</button>
-							<button className="btn" onClick={() => handleOpenFolder(server.id)} title="Open Folder">
-								📂
-							</button>
-							<button className="btn" onClick={() => onCopy(server)} title="Copy">
-								📋
-							</button>
-							<button className="btn" onClick={() => handleDelete(server.id)} title="Delete">
-								🗑️
-							</button>
+								<button className="btn" onClick={() => onEdit(server)} title="Edit Configuration">
+									✏️
+								</button>
+								<button className="btn" onClick={() => onEditConfig(server)} title="Edit Config File">
+									📝
+								</button>
+								<button className="btn" onClick={() => handleOpenFolder(server.id)} title="Open Folder">
+									📂
+								</button>
+								<button className="btn" onClick={() => onCopy(server)} title="Copy">
+									📋
+								</button>
+								<button className="btn" onClick={() => handleDelete(server.id)} title="Delete">
+									🗑️
+								</button>
+							</div>
 						</div>
-					</div>
-				))}
+					))}
+				</div>
 			</div>
 		</div>
 	);

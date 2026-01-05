@@ -21,6 +21,23 @@
 					"endsPattern": "Local:"
 				}
 			}
+		},
+		{
+			"label": "build-debug",
+			"type": "shell",
+			"command": "cargo",
+			"args": [
+				"build",
+				"--manifest-path=./src-tauri/Cargo.toml",
+				"--no-default-features"
+			],
+			"dependsOn": [
+				"ui:dev"
+			],
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			}
 		}
 	]
 }

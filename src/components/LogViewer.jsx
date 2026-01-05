@@ -26,7 +26,7 @@ export default function LogViewer({ serverId, serverName, logs, onClose, onClear
 	return (
 		<div className="view-container">
 			<div className="view-header">
-				<h3 style={{ margin: 0 }}>Logs: {serverName}</h3>
+				<h2>Logs: {serverName}</h2>
 				<div style={{ display: 'flex', gap: 8 }}>
 					<button className="btn" onClick={handleClearLogs} title="Clear Logs">
 						🗑️ Clear

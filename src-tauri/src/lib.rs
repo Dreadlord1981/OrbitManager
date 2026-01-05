@@ -127,6 +127,7 @@ pub fn run() {
                     tauri::WebviewUrl::App("splash.html".into()),
                 )
                 .title("OrbitManager Loading")
+                .transparent(true)
                 .decorations(false)
                 .resizable(false)
                 .always_on_top(true)
