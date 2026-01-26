@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { invoke } from "@tauri-apps/api/core";
+import { ArrowLeftIcon, CheckIcon } from "./Icons";
 
 export default function ServerForm({ initialData, onSave, onCancel }) {
 	const [formData, setFormData] = useState({
@@ -61,45 +62,45 @@ export default function ServerForm({ initialData, onSave, onCancel }) {
 	return (
 		<div className="view-container">
 			<div className="view-header">
-				<h2>{initialData ? "Edit Server" : "Create New Server"}</h2>
+				<h3>{initialData ? "Edit Server Configuration" : "Create New Server"}</h3>
 			</div>
-			<div className="view-content" style={{ padding: '24px' }}>
+			<div className="view-content">
 				<div className="form-container">
 					<form onSubmit={handleSubmit}>
 						<div className="form-group">
-							<label>Name</label>
+							<label>Display Name</label>
 							<input
 								className="form-input"
 								name="name"
 								value={formData.name}
 								onChange={handleChange}
-								placeholder="My Backend Server"
+								placeholder="e.g. Production Backend"
 							/>
 						</div>
 
 						<div className="form-group">
-							<label>Root Path</label>
+							<label>Project Root Path</label>
 							<input
 								className="form-input"
 								name="path"
 								value={formData.path}
 								onChange={handleChange}
-								placeholder="C:\Projects\my-server"
+								placeholder="C:\Work\my-project"
 							/>
 						</div>
 
 						<div className="form-group">
-							<label>Config File Path</label>
+							<label>Configuration Filename</label>
 							<input
 								className="form-input"
 								name="config_path"
 								value={formData.config_path}
 								onChange={handleChange}
-								placeholder="defaults to webconfig.toml"
+								placeholder="webconfig.toml"
 							/>
 						</div>
 
-						<div className="form-group checkbox-group">
+						<div className="checkbox-group">
 							<input
 								type="checkbox"
 								name="auto_start"
@@ -107,15 +108,17 @@ export default function ServerForm({ initialData, onSave, onCancel }) {
 								onChange={handleChange}
 								id="auto_start"
 							/>
-							<label htmlFor="auto_start" style={{ marginBottom: 0, cursor: 'pointer' }}>Auto-start on launch</label>
+							<label htmlFor="auto_start" style={{ marginBottom: 0, cursor: 'pointer', fontWeight: 600 }}>
+								Automatically start this server on application launch
+							</label>
 						</div>
 
-						<div className="card-actions" style={{ justifyContent: 'flex-end', marginTop: '24px' }}>
+						<div className="card-actions" style={{ justifyContent: 'flex-end', gap: '16px' }}>
 							<button type="button" className="btn" onClick={onCancel}>
-								Cancel
+								<ArrowLeftIcon size={14} /> Cancel
 							</button>
 							<button type="submit" className="btn btn-primary">
-								Save Server
+								<CheckIcon size={14} /> {initialData ? "Save Changes" : "Create Server"}
 							</button>
 						</div>
 					</form>

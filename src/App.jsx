@@ -7,6 +7,7 @@ import LogViewer from "./components/LogViewer";
 import ConfigEditor from "./components/ConfigEditor";
 import Settings from "./components/Settings";
 import Dialog from "./components/Dialog";
+import { SettingsIcon, ArrowLeftIcon } from "./components/Icons";
 import "./App.css";
 
 function App() {
@@ -121,16 +122,16 @@ function App() {
 	return (
 		<div className="app-container">
 			<header className="header">
-				<h1>OrbitManager</h1>
+				<h1>Orbit Manager</h1>
 				<div style={{ display: 'flex', gap: 8 }}>
 					{view === "dashboard" && (
-						<button className="btn" onClick={() => setView("settings")} title="Settings">
-							⚙️
+						<button className="btn btn-icon-only" onClick={() => setView("settings")} title="Application Settings">
+							<SettingsIcon size={18} />
 						</button>
 					)}
 					{view !== "dashboard" && (
-						<button className="btn" onClick={() => setView("dashboard")}>
-							Back to Dashboard
+						<button className="btn btn-icon-only" onClick={() => setView("dashboard")} title="Back to Dashboard">
+							<ArrowLeftIcon size={18} />
 						</button>
 					)}
 				</div>

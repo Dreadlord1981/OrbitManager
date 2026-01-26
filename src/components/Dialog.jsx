@@ -1,7 +1,7 @@
 import React from "react";
 
 /**
- * Modern Dialog component for OrbitManager
+ * Modern Dialog component for Orbit Manager
  * @param {Object} props
  * @param {string} props.title - Title of the dialog
  * @param {string} props.message - Message content
@@ -31,8 +31,7 @@ export default function Dialog({ title, message, type = 'info', onClose, onConfi
 		<div className="dialog-overlay" onClick={handleBackdropClick}>
 			<div className="dialog-box">
 				<div className="dialog-header">
-					<span className="dialog-type-icon">{getIcon()}</span>
-					<h3 className="dialog-title">{title || (type === 'error' ? 'Error' : 'Notification')}</h3>
+					<h3 className="dialog-title">{title || (type === 'error' ? 'Notice' : 'Notification')}</h3>
 				</div>
 
 				<div className="dialog-body">
@@ -43,10 +42,12 @@ export default function Dialog({ title, message, type = 'info', onClose, onConfi
 					{type === 'confirm' ? (
 						<>
 							<button className="btn" onClick={onClose}>Cancel</button>
-							<button className="btn btn-primary" onClick={onConfirm}>Confirm</button>
+							<button className="btn btn-primary" style={{ backgroundColor: type === 'error' ? 'var(--danger-color)' : 'var(--accent-color)' }} onClick={onConfirm}>
+								Confirm
+							</button>
 						</>
 					) : (
-						<button className="btn btn-primary" onClick={onClose}>Close</button>
+						<button className="btn btn-primary" onClick={onClose}>Dismiss</button>
 					)}
 				</div>
 			</div>

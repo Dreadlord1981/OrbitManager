@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import Editor from "@monaco-editor/react";
+import { ArrowLeftIcon, CheckIcon } from "./Icons";
 
 export default function ConfigEditor({ serverId, serverName, onClose, showDialog }) {
 	const [content, setContent] = useState("");
@@ -219,13 +220,15 @@ export default function ConfigEditor({ serverId, serverName, onClose, showDialog
 	}
 
 	return (
-		<div className="config-editor-container" style={{ display: 'flex', flexDirection: 'column', height: '100%', background: 'var(--bg-primary)' }}>
-			<div className="logs-header" style={{ padding: '10px 20px', borderBottom: '1px solid var(--border-color)', background: 'var(--bg-secondary)' }}>
-				<h3 style={{ margin: 0, color: 'var(--text-primary)' }}>Editing: {serverName} Config</h3>
+		<div className="view-container">
+			<div className="view-header">
+				<h3>Editing: {serverName} config.toml</h3>
 				<div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-					{hasErrors && <span style={{ color: '#ff4444', fontSize: '13px' }}>⚠️ Blocked: Fix Errors</span>}
-					{!hasErrors && hasWarnings && <span style={{ color: '#ffcc00', fontSize: '13px' }}>⚠️ Suggestions Available</span>}
-					<button className="btn" onClick={onClose} disabled={saving}>Cancel</button>
+					{hasErrors && <span style={{ color: 'var(--danger-color)', fontSize: '11px', fontWeight: 700, letterSpacing: '0.05em' }}>FIX ERRORS</span>}
+					{!hasErrors && hasWarnings && <span style={{ color: 'var(--warning-color)', fontSize: '11px', fontWeight: 700, letterSpacing: '0.05em' }}>SUGGESTIONS</span>}
+					<button className="btn" onClick={onClose} disabled={saving}>
+						<ArrowLeftIcon size={14} style={{ marginRight: '6px' }} /> Cancel
+					</button>
 					<button className="btn btn-primary" onClick={async () => {
 						setSaving(true);
 						try {
@@ -239,11 +242,11 @@ export default function ConfigEditor({ serverId, serverName, onClose, showDialog
 							});
 						} finally { setSaving(false); }
 					}} disabled={saving || hasErrors}>
-						{saving ? "Saving..." : "Save Changes"}
+						{saving ? "Saving..." : <><CheckIcon size={14} style={{ marginRight: '8px' }} /> Save Changes</>}
 					</button>
 				</div>
 			</div>
-			<div style={{ flex: 1 }}>
+			<div style={{ flex: 1, position: 'relative' }}>
 				<Editor
 					height="100%" language="toml" theme={theme} value={content}
 					onChange={(val) => {
@@ -254,11 +257,13 @@ export default function ConfigEditor({ serverId, serverName, onClose, showDialog
 					options={{
 						minimap: { enabled: true },
 						fontSize: 14,
+						fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
 						automaticLayout: true,
 						wordBasedSuggestions: true,
 						scrollBeyondLastLine: false,
-						smoothScrolling: false,
+						smoothScrolling: true,
 						mouseWheelScrollSensitivity: 1,
+						padding: { top: 16 },
 						scrollbar: {
 							vertical: 'visible',
 							horizontal: 'auto',

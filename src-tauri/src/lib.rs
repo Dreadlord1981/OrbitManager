@@ -9,7 +9,7 @@ pub fn run() {
         // Handle autostart plugin
         .plugin(
             tauri_plugin_autostart::Builder::new()
-                .app_name("OrbitManager")
+                .app_name("Orbit Manager")
                 .build(),
         )
         .manage(manager::ManagerState::new())
@@ -36,7 +36,7 @@ pub fn run() {
 
             let quit_i = MenuItem::with_id(app, "quit", "Quit", true, None::<&str>).unwrap();
             let show_i =
-                MenuItem::with_id(app, "show", "Show OrbitManager", true, None::<&str>).unwrap();
+                MenuItem::with_id(app, "show", "Show Orbit Manager", true, None::<&str>).unwrap();
             let start_all_i =
                 MenuItem::with_id(app, "start_all", "Start All Servers", true, None::<&str>)
                     .unwrap();
@@ -47,7 +47,7 @@ pub fn run() {
 
             let _tray = TrayIconBuilder::with_id("tray")
                 .icon(tauri::image::Image::from_bytes(include_bytes!("../icons/icon.png")).unwrap())
-                .tooltip("OrbitManager")
+                .tooltip("Orbit Manager")
                 .menu(&menu)
                 .show_menu_on_left_click(false)
                 .on_menu_event(|app, event| match event.id.as_ref() {
@@ -126,11 +126,12 @@ pub fn run() {
                     "splashscreen",
                     tauri::WebviewUrl::App("splash.html".into()),
                 )
-                .title("OrbitManager Loading")
+                .title("Orbit Manager Loading")
                 .transparent(true)
                 .decorations(false)
                 .resizable(false)
                 .always_on_top(true)
+                .shadow(false)
                 .inner_size(400.0, 400.0)
                 .center()
                 .build()?;

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { invoke } from "@tauri-apps/api/core";
+import { ArrowLeftIcon } from "./Icons";
 import { enable, disable, isEnabled } from "@tauri-apps/plugin-autostart";
 
 export default function Settings({ onClose, showDialog }) {
@@ -103,64 +104,65 @@ export default function Settings({ onClose, showDialog }) {
 	return (
 		<div className="view-container">
 			<div className="view-header">
-				<h3 style={{ margin: 0 }}>Application Settings</h3>
-				<button className="btn" onClick={onClose}>Close</button>
+				<h3>Application Settings</h3>
+				<button className="btn btn-icon-only" onClick={onClose} title="Back to Dashboard">
+					<ArrowLeftIcon size={18} />
+				</button>
 			</div>
 
-			<div className="view-content" style={{ padding: '24px' }}>
-				<div className="settings-group" style={{ marginBottom: '24px' }}>
-					<div className="settings-item" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-						<div style={{ flex: 1 }}>
-							<div style={{ fontWeight: 600, marginBottom: '4px' }}>Start with System</div>
-							<div style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
-								Launch OrbitManager automatically when you log in.
+			<div className="view-content" style={{ maxWidth: '600px', margin: '0 auto', width: '100%' }}>
+				<div className="settings-section" style={{ marginTop: '12px' }}>
+					<div className="settings-item" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
+						<div style={{ paddingRight: '24px' }}>
+							<div style={{ fontWeight: 700, fontSize: '15px', color: 'var(--text-primary)', marginBottom: '4px' }}>Start with System</div>
+							<div style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
+								Launch Orbit Manager automatically when you log in to your machine.
 							</div>
 						</div>
-						<div style={{ display: 'flex', alignItems: 'center' }}>
-							<label className="orbit-switch">
-								<input
-									type="checkbox"
-									checked={!!settings.autostart}
-									onChange={() => handleToggle('autostart')}
-									disabled={saving}
-								/>
-								<span className="orbit-slider"></span>
-							</label>
-						</div>
+						<label className="orbit-switch">
+							<input
+								type="checkbox"
+								checked={!!settings.autostart}
+								onChange={() => handleToggle('autostart')}
+								disabled={saving}
+							/>
+							<span className="orbit-slider"></span>
+						</label>
 					</div>
 
-					<div className="settings-item" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-						<div style={{ flex: 1 }}>
-							<div style={{ fontWeight: 600, marginBottom: '4px' }}>Start Hidden in Tray</div>
-							<div style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
-								Launch silently into the system tray without showing the splash or main window.
+					<div className="settings-item" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
+						<div style={{ paddingRight: '24px' }}>
+							<div style={{ fontWeight: 700, fontSize: '15px', color: 'var(--text-primary)', marginBottom: '4px' }}>Start Hidden</div>
+							<div style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
+								Minimize to tray on startup without showing the main window.
 							</div>
 						</div>
-						<div style={{ display: 'flex', alignItems: 'center' }}>
-							<label className="orbit-switch">
-								<input
-									type="checkbox"
-									checked={!!settings.startHidden}
-									onChange={() => handleToggle('startHidden')}
-									disabled={saving}
-								/>
-								<span className="orbit-slider"></span>
-							</label>
-						</div>
+						<label className="orbit-switch">
+							<input
+								type="checkbox"
+								checked={!!settings.startHidden}
+								onChange={() => handleToggle('startHidden')}
+								disabled={saving}
+							/>
+							<span className="orbit-slider"></span>
+						</label>
 					</div>
 				</div>
 
-				<div style={{ paddingTop: '24px', borderTop: '1px solid var(--border-color)', color: 'var(--text-secondary)', fontSize: '12px' }}>
-					<div>OrbitManager v0.1.0 • Settings are saved to system preferences automatically.</div>
+				<div style={{ marginTop: '48px', paddingTop: '24px', borderTop: '1px solid var(--border-color)', color: 'var(--text-secondary)', fontSize: '12px', textAlign: 'center' }}>
+					<div style={{ fontWeight: 600 }}>Orbit Manager v0.1.0</div>
+					<div style={{ marginTop: '4px' }}>Settings are stored locally on your system.</div>
 					{settings.lastModified && (
 						<div
 							style={{
-								marginTop: '8px',
+								marginTop: '16px',
 								color: 'var(--success-color)',
-								fontWeight: 500
+								fontWeight: 700,
+								textTransform: 'uppercase',
+								letterSpacing: '0.05em'
 							}}
 						>
-							✓ Saved {formatTimestamp(settings.lastModified)}
+							Last saved {formatTimestamp(settings.lastModified)}
 						</div>
 					)}
 				</div>

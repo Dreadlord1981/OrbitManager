@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import { listen } from "@tauri-apps/api/event";
 import { invoke } from "@tauri-apps/api/core";
+import { TrashIcon, ArrowLeftIcon } from "./Icons";
 
 export default function LogViewer({ serverId, serverName, logs, onClose, onClearLogs }) {
 	const bottomRef = useRef(null);
@@ -26,25 +27,27 @@ export default function LogViewer({ serverId, serverName, logs, onClose, onClear
 	return (
 		<div className="view-container">
 			<div className="view-header">
-				<h2>Logs: {serverName}</h2>
-				<div style={{ display: 'flex', gap: 8 }}>
-					<button className="btn" onClick={handleClearLogs} title="Clear Logs">
-						🗑️ Clear
+				<h3>Logs: {serverName}</h3>
+				<div style={{ display: 'flex', gap: 12 }}>
+					<button className="btn" onClick={handleClearLogs} title="Clear Terminal">
+						<TrashIcon size={14} style={{ marginRight: '6px' }} /> Clear
 					</button>
-					<button className="btn" onClick={onClose}>Close</button>
+					<button className="btn" onClick={onClose}>
+						<ArrowLeftIcon size={14} style={{ marginRight: '6px' }} /> Close
+					</button>
 				</div>
 			</div>
 			<div className="terminal">
-				{logs.length === 0 && <div style={{ opacity: 0.5 }}>Waiting for output...</div>}
+				{logs.length === 0 && <div style={{ opacity: 0.5, fontStyle: 'italic' }}>Waiting for output...</div>}
 				{logs.map((log, i) => (
 					<div key={i} className={`log-line ${log.stream === 'stderr' ? 'log-err' : ''}`}>
-						<span style={{ opacity: 0.5, marginRight: 8, fontSize: '0.9em' }}>
-							[{log.time ? new Date(log.time).toLocaleTimeString() : 'History'}]
+						<span style={{ opacity: 0.4, marginRight: 12, fontSize: '0.85em', fontWeight: 600 }}>
+							{log.time ? new Date(log.time).toLocaleTimeString() : 'HISTORY'}
 						</span>
 						{log.line}
 					</div>
 				))}
-				<div ref={bottomRef} />
+				<div ref={bottomRef} style={{ height: '10px' }} />
 			</div>
 		</div>
 	);
