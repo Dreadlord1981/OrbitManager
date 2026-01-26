@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { ArrowLeftIcon } from "./Icons";
 import { enable, disable, isEnabled } from "@tauri-apps/plugin-autostart";
+import { getVersion } from "@tauri-apps/api/app";
 
 export default function Settings({ onClose, showDialog }) {
 	const [settings, setSettings] = useState({
@@ -11,6 +12,7 @@ export default function Settings({ onClose, showDialog }) {
 	});
 	const [loading, setLoading] = useState(true);
 	const [saving, setSaving] = useState(false);
+	const [version, setVersion] = useState("");
 
 	// Helper to format timestamp
 	const formatTimestamp = (timestamp) => {
@@ -43,6 +45,13 @@ export default function Settings({ onClose, showDialog }) {
 					startHidden: !!s.startHidden,
 					lastModified: s.lastModified || null,
 				});
+
+				try {
+					const v = await getVersion();
+					setVersion(v);
+				} catch (e) {
+					console.error("Failed to get app version:", e);
+				}
 			} catch (err) {
 				console.error("Failed to load settings:", err);
 				if (showDialog) {
@@ -150,7 +159,7 @@ export default function Settings({ onClose, showDialog }) {
 				</div>
 
 				<div style={{ marginTop: '48px', paddingTop: '24px', borderTop: '1px solid var(--border-color)', color: 'var(--text-secondary)', fontSize: '12px', textAlign: 'center' }}>
-					<div style={{ fontWeight: 600 }}>Orbit Manager v0.1.0</div>
+					<div style={{ fontWeight: 600 }}>Orbit Manager v{version || '...'}</div>
 					<div style={{ marginTop: '4px' }}>Settings are stored locally on your system.</div>
 					{settings.lastModified && (
 						<div
