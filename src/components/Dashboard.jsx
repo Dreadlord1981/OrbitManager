@@ -9,6 +9,7 @@ import {
 
 export default function Dashboard({ onAdd, onEdit, onCopy, onViewLogs, onEditConfig, showDialog }) {
 	const [servers, setServers] = useState([]);
+	const [loading, setLoading] = useState(true);
 
 	const refreshServers = async () => {
 		try {
@@ -16,6 +17,8 @@ export default function Dashboard({ onAdd, onEdit, onCopy, onViewLogs, onEditCon
 			setServers(list);
 		} catch (e) {
 			console.error(e);
+		} finally {
+			setLoading(false);
 		}
 	};
 
@@ -103,6 +106,19 @@ export default function Dashboard({ onAdd, onEdit, onCopy, onViewLogs, onEditCon
 		}
 	};
 
+	if (loading) {
+		return (
+			<div className="view-container">
+				<div className="view-header">
+					<h2>Servers</h2>
+				</div>
+				<div className="view-content">
+					<div className="empty-state" style={{ opacity: 0.5 }}>Loading servers...</div>
+				</div>
+			</div>
+		);
+	}
+
 	return (
 		<div className="view-container">
 			<div className="view-header">
@@ -116,7 +132,7 @@ export default function Dashboard({ onAdd, onEdit, onCopy, onViewLogs, onEditCon
 
 			<div className="view-content">
 				<div className="server-list">
-					{servers.length === 0 && (
+					{!loading && servers.length === 0 && (
 						<div className="empty-state">
 							<h3>No Servers Configured</h3>
 							<p>Store and manage your local server configurations here.</p>
