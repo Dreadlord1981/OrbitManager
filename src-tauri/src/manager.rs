@@ -109,19 +109,15 @@ fn ensure_defaults<R: Runtime>(app: &AppHandle<R>, config: &ServerConfig) -> std
 }
 
 // Persistence Helper
-fn get_servers_path<R: Runtime>(app: &AppHandle<R>) -> PathBuf {
+pub fn get_servers_path<R: Runtime>(app: &AppHandle<R>) -> PathBuf {
     let data_dir = app.path().app_data_dir().unwrap();
-
     let orbit_path = data_dir.join("OrbitManager");
-
     orbit_path.join("servers.json")
 }
 
 pub fn get_settings_path<R: Runtime>(app: &AppHandle<R>) -> PathBuf {
     let data_dir = app.path().app_data_dir().unwrap();
-
     let orbit_path = data_dir.join("OrbitManager");
-
     orbit_path.join("settings.json")
 }
 
@@ -129,11 +125,19 @@ pub fn get_settings_path<R: Runtime>(app: &AppHandle<R>) -> PathBuf {
 pub async fn get_app_settings<R: Runtime>(app: AppHandle<R>) -> Result<AppSettings, String> {
     let path = get_settings_path(&app);
 
+    // Ensure directory exists so we don't fail on save later
+    if let Some(parent) = path.parent() {
+        let _ = fs::create_dir_all(parent);
+    }
+
     let settings = if path.exists() {
         let content = fs::read_to_string(&path).map_err(|e| e.to_string())?;
         serde_json::from_str(&content).map_err(|e| e.to_string())?
     } else {
-        AppSettings::default()
+        let default_settings = AppSettings::default();
+        let content = serde_json::to_string_pretty(&default_settings).map_err(|e| e.to_string())?;
+        fs::write(&path, content).map_err(|e| e.to_string())?;
+        default_settings
     };
 
     Ok(settings)
@@ -165,11 +169,10 @@ pub async fn save_app_settings<R: Runtime>(
 }
 
 fn get_log_path<R: Runtime>(config: &ServerConfig, app: &AppHandle<R>) -> PathBuf {
-    let data_dir = app.path().data_dir().unwrap();
+    let data_dir = app.path().app_data_dir().unwrap();
+    let orbit_path = data_dir.join("OrbitManager");
 
     let server_name = &config.name;
-
-    let orbit_path = data_dir.join("OrbitManager");
 
     let mut server_path = orbit_path.join(server_name);
 

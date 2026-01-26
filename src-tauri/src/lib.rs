@@ -64,11 +64,7 @@ pub fn run() {
                         let app_handle = app.clone();
                         tauri::async_runtime::spawn(async move {
                             let state = app_handle.state::<manager::ManagerState>();
-                            let path = app_handle
-                                .path()
-                                .app_data_dir()
-                                .unwrap()
-                                .join("servers.json");
+                            let path = manager::get_servers_path(&app_handle);
                             if path.exists() {
                                 if let Ok(content) = std::fs::read_to_string(&path) {
                                     if let Ok(servers) =
@@ -143,11 +139,7 @@ pub fn run() {
             std::thread::spawn(move || {
                 tauri::async_runtime::block_on(async move {
                     let state = app_handle.state::<manager::ManagerState>();
-                    let path = app_handle
-                        .path()
-                        .app_data_dir()
-                        .unwrap()
-                        .join("servers.json");
+                    let path = manager::get_servers_path(&app_handle);
 
                     if path.exists() {
                         if let Ok(content) = std::fs::read_to_string(&path) {

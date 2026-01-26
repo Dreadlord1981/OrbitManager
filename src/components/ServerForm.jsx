@@ -113,7 +113,7 @@ export default function ServerForm({ initialData, onSave, onCancel }) {
 							</label>
 						</div>
 
-						<div className="card-actions" style={{ justifyContent: 'flex-end', gap: '16px' }}>
+						<div className="form-actions">
 							<button type="button" className="btn" onClick={onCancel}>
 								<ArrowLeftIcon size={14} /> Cancel
 							</button>
