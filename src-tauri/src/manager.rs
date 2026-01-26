@@ -47,18 +47,15 @@ impl ManagerState {
 }
 
 fn expand_path(path: &str) -> String {
-    // 1. Tilde expansion
+    // 1. Expand Windows-style %VAR% variables
+    let windows_expanded = expand_env_vars(path).unwrap_or_else(|_| path.to_string());
 
-    let result = if path.starts_with("%") {
-        expand_env_vars(path).unwrap()
-    } else if path.starts_with("~") {
-        shellexpand::full(&path).unwrap().into()
-    }
-	else {
-        shellexpand::env(&path).unwrap().into()
-    };
+    // 2. Expand Unix-style $VAR and ~ tilde expansion
+    let final_expanded = shellexpand::full(&windows_expanded)
+        .unwrap_or_else(|_| windows_expanded.clone().into())
+        .into_owned();
 
-    result
+    final_expanded
 }
 
 fn strip_ansi(input: &str) -> String {
@@ -77,8 +74,7 @@ fn ensure_defaults<R: Runtime>(app: &AppHandle<R>, config: &ServerConfig) -> std
             .parent()
             .unwrap_or(&PathBuf::from("."))
             .to_path_buf()
-    }
-	else {
+    } else {
         server_path.clone()
     };
 
@@ -98,8 +94,7 @@ fn ensure_defaults<R: Runtime>(app: &AppHandle<R>, config: &ServerConfig) -> std
 
     let target_config_file = if !config_file_name.is_empty() {
         server_path.join(config_file_name)
-    }
-	else {
+    } else {
         server_path.join("webconfig.toml")
     };
 
@@ -132,14 +127,12 @@ pub fn get_settings_path<R: Runtime>(app: &AppHandle<R>) -> PathBuf {
 
 #[tauri::command]
 pub async fn get_app_settings<R: Runtime>(app: AppHandle<R>) -> Result<AppSettings, String> {
-
     let path = get_settings_path(&app);
 
     let settings = if path.exists() {
         let content = fs::read_to_string(&path).map_err(|e| e.to_string())?;
         serde_json::from_str(&content).map_err(|e| e.to_string())?
-    }
-	else {
+    } else {
         AppSettings::default()
     };
 
@@ -151,7 +144,6 @@ pub async fn save_app_settings<R: Runtime>(
     app: AppHandle<R>,
     mut settings: AppSettings,
 ) -> Result<(), String> {
-
     let path = get_settings_path(&app);
 
     if !path.exists() {
@@ -201,15 +193,13 @@ fn get_config_full_path(config: &ServerConfig) -> PathBuf {
             .parent()
             .unwrap_or(&PathBuf::from("."))
             .to_path_buf()
-    }
-	else {
+    } else {
         server_path
     };
 
     if !config.config_path.is_empty() {
         root.join(&config.config_path)
-    }
-	else {
+    } else {
         root.join("webconfig.toml")
     }
 }
@@ -238,8 +228,7 @@ fn get_server_address(config: &ServerConfig) -> String {
                     .and_then(|p| p.as_integer())
                 {
                     format!("localhost:{}", port)
-                }
-				else {
+                } else {
                     String::from("—")
                 }
             }
@@ -254,14 +243,12 @@ pub async fn get_servers<R: Runtime>(
     app: AppHandle<R>,
     state: tauri::State<'_, ManagerState>,
 ) -> Result<Vec<serde_json::Value>, String> {
-
     let path = get_servers_path(&app);
 
     let servers: Vec<ServerConfig> = if path.exists() {
         let content = fs::read_to_string(&path).map_err(|e| e.to_string())?;
         serde_json::from_str(&content).map_err(|e| e.to_string())?
-    }
-	else {
+    } else {
         Vec::new()
     };
 
@@ -292,13 +279,12 @@ pub async fn save_server<R: Runtime>(
     app: AppHandle<R>,
     config: ServerConfig,
 ) -> Result<(), String> {
-
     let path = get_servers_path(&app);
 
     ensure_defaults(&app, &config).map_err(|e| e.to_string())?;
 
     // Ensure dir exists
-	
+
     if let Some(parent) = path.parent() {
         fs::create_dir_all(parent).map_err(|e| e.to_string())?;
     }
@@ -306,15 +292,13 @@ pub async fn save_server<R: Runtime>(
     let mut servers: Vec<ServerConfig> = if path.exists() {
         let content = fs::read_to_string(&path).map_err(|e| e.to_string())?;
         serde_json::from_str(&content).unwrap_or_default()
-    }
-	else {
+    } else {
         Vec::new()
     };
 
     if let Some(pos) = servers.iter().position(|s| s.id == config.id) {
         servers[pos] = config;
-    }
-	else {
+    } else {
         servers.push(config);
     }
 
@@ -325,14 +309,12 @@ pub async fn save_server<R: Runtime>(
 
 #[tauri::command]
 pub async fn delete_server<R: Runtime>(app: AppHandle<R>, id: String) -> Result<(), String> {
-
     let path = get_servers_path(&app);
 
     let mut servers: Vec<ServerConfig> = if path.exists() {
         let content = fs::read_to_string(&path).map_err(|e| e.to_string())?;
         serde_json::from_str(&content).unwrap_or_default()
-    }
-	else {
+    } else {
         return Ok(());
     };
 
@@ -350,15 +332,13 @@ pub async fn start_server<R: Runtime>(
     state: tauri::State<'_, ManagerState>,
     id: String,
 ) -> Result<(), String> {
-	
     // 1. Get config
     let path = get_servers_path(&app);
-	
+
     let servers: Vec<ServerConfig> = if path.exists() {
         let content = fs::read_to_string(&path).map_err(|e| e.to_string())?;
         serde_json::from_str(&content).unwrap_or_default()
-    }
-	else {
+    } else {
         return Err("No servers found".to_string());
     };
 
@@ -489,8 +469,7 @@ pub async fn stop_server(state: tauri::State<'_, ManagerState>, id: String) -> R
         // But kill() is usually async-ish in effect.
         // We removed it from the map so we consider it stopped.
         // The threads reading stdout will finish when pipe closes.
-    }
-	else {
+    } else {
         return Err("Server not running".to_string());
     }
     Ok(())
@@ -505,8 +484,7 @@ pub async fn get_log_history<R: Runtime>(
     let servers: Vec<ServerConfig> = if path.exists() {
         let content = fs::read_to_string(&path).map_err(|e| e.to_string())?;
         serde_json::from_str(&content).unwrap_or_default()
-    }
-	else {
+    } else {
         return Ok(Vec::new());
     };
 
@@ -527,8 +505,7 @@ pub async fn get_log_history<R: Runtime>(
     let lines: Vec<String> = reader.lines().map_while(Result::ok).collect();
     let start = if lines.len() > 200 {
         lines.len() - 200
-    }
-	else {
+    } else {
         0
     };
 
@@ -549,8 +526,7 @@ pub async fn clear_logs<R: Runtime>(app: AppHandle<R>, id: String) -> Result<(),
     let servers: Vec<ServerConfig> = if path.exists() {
         let content = fs::read_to_string(&path).map_err(|e| e.to_string())?;
         serde_json::from_str(&content).unwrap_or_default()
-    }
-	else {
+    } else {
         return Err("No servers found".to_string());
     };
 
@@ -573,8 +549,7 @@ pub async fn open_in_explorer<R: Runtime>(app: AppHandle<R>, id: String) -> Resu
     let servers: Vec<ServerConfig> = if path.exists() {
         let content = fs::read_to_string(&path).map_err(|e| e.to_string())?;
         serde_json::from_str(&content).unwrap_or_default()
-    }
-	else {
+    } else {
         return Err("No servers found".to_string());
     };
 
@@ -619,8 +594,7 @@ pub async fn read_config_file<R: Runtime>(app: AppHandle<R>, id: String) -> Resu
     let servers: Vec<ServerConfig> = if path.exists() {
         let content = fs::read_to_string(&path).map_err(|e| e.to_string())?;
         serde_json::from_str(&content).unwrap_or_default()
-    }
-	else {
+    } else {
         return Err("No servers found".to_string());
     };
 
@@ -647,8 +621,7 @@ pub async fn save_config_file<R: Runtime>(
     let servers: Vec<ServerConfig> = if path.exists() {
         let content = fs::read_to_string(&path).map_err(|e| e.to_string())?;
         serde_json::from_str(&content).unwrap_or_default()
-    }
-	else {
+    } else {
         return Err("No servers found".to_string());
     };
 
@@ -688,8 +661,7 @@ pub async fn open_server_browser<R: Runtime>(app: AppHandle<R>, id: String) -> R
     let servers: Vec<ServerConfig> = if path.exists() {
         let content = fs::read_to_string(&path).map_err(|e| e.to_string())?;
         serde_json::from_str(&content).map_err(|e| e.to_string())?
-    }
-	else {
+    } else {
         return Err("No servers found".to_string());
     };
 
@@ -705,8 +677,7 @@ pub async fn open_server_browser<R: Runtime>(app: AppHandle<R>, id: String) -> R
             .parent()
             .unwrap_or(&PathBuf::from("."))
             .to_path_buf()
-    }
-	else {
+    } else {
         base_path.clone()
     };
     config_file.push(&config.config_path);
