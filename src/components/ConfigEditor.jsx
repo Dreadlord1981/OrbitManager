@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import Editor from "@monaco-editor/react";
-import { ArrowLeftIcon, CheckIcon } from "./Icons";
+import { CheckIcon } from "./Icons";
 
 export default function ConfigEditor({ serverId, serverName, onClose, showDialog }) {
 	const [content, setContent] = useState("");
@@ -226,9 +226,6 @@ export default function ConfigEditor({ serverId, serverName, onClose, showDialog
 				<div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
 					{hasErrors && <span style={{ color: 'var(--danger-color)', fontSize: '11px', fontWeight: 700, letterSpacing: '0.05em' }}>FIX ERRORS</span>}
 					{!hasErrors && hasWarnings && <span style={{ color: 'var(--warning-color)', fontSize: '11px', fontWeight: 700, letterSpacing: '0.05em' }}>SUGGESTIONS</span>}
-					<button className="btn" onClick={onClose} disabled={saving}>
-						<ArrowLeftIcon size={14} style={{ marginRight: '6px' }} /> Cancel
-					</button>
 					<button className="btn btn-primary" onClick={async () => {
 						setSaving(true);
 						try {

@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import { listen } from "@tauri-apps/api/event";
 import { invoke } from "@tauri-apps/api/core";
-import { TrashIcon, ArrowLeftIcon } from "./Icons";
+import { TrashIcon } from "./Icons";
 
 export default function LogViewer({ serverId, serverName, logs, onClose, onClearLogs }) {
 	const bottomRef = useRef(null);
@@ -31,9 +31,6 @@ export default function LogViewer({ serverId, serverName, logs, onClose, onClear
 				<div style={{ display: 'flex', gap: 12 }}>
 					<button className="btn" onClick={handleClearLogs} title="Clear Terminal">
 						<TrashIcon size={14} style={{ marginRight: '6px' }} /> Clear
-					</button>
-					<button className="btn" onClick={onClose}>
-						<ArrowLeftIcon size={14} style={{ marginRight: '6px' }} /> Close
 					</button>
 				</div>
 			</div>

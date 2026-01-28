@@ -9,6 +9,7 @@ export default function ServerForm({ initialData, onSave, onCancel }) {
 		path: "",
 		config_path: "",
 		auto_start: false,
+		verbose: false,
 	});
 
 	useEffect(() => {
@@ -100,17 +101,32 @@ export default function ServerForm({ initialData, onSave, onCancel }) {
 							/>
 						</div>
 
-						<div className="checkbox-group">
-							<input
-								type="checkbox"
-								name="auto_start"
-								checked={formData.auto_start}
-								onChange={handleChange}
-								id="auto_start"
-							/>
-							<label htmlFor="auto_start" style={{ marginBottom: 0, cursor: 'pointer', fontWeight: 600 }}>
-								Automatically start this server on application launch
-							</label>
+						<div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
+							<div className="checkbox-group" style={{ marginBottom: 0 }}>
+								<input
+									type="checkbox"
+									name="auto_start"
+									checked={formData.auto_start}
+									onChange={handleChange}
+									id="auto_start"
+								/>
+								<label htmlFor="auto_start" style={{ marginBottom: 0, cursor: 'pointer', fontWeight: 600, fontSize: '11px' }}>
+									Auto-start server
+								</label>
+							</div>
+
+							<div className="checkbox-group" style={{ marginBottom: 0 }}>
+								<input
+									type="checkbox"
+									name="verbose"
+									checked={formData.verbose}
+									onChange={handleChange}
+									id="verbose"
+								/>
+								<label htmlFor="verbose" style={{ marginBottom: 0, cursor: 'pointer', fontWeight: 600, fontSize: '11px' }}>
+									Verbose output
+								</label>
+							</div>
 						</div>
 
 						<div className="form-actions">

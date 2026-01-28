@@ -18,6 +18,7 @@ pub struct ServerConfig {
     pub path: String,
     pub config_path: String,
     pub auto_start: bool,
+    pub verbose: bool,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, Default)]
@@ -384,6 +385,10 @@ pub async fn start_server<R: Runtime>(
     }
 
     cmd.arg("-r").arg(&config_path);
+
+    if config.verbose {
+        cmd.arg("-v");
+    }
 
     cmd.stdout(Stdio::piped());
     cmd.stderr(Stdio::piped());

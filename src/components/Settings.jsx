@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { invoke } from "@tauri-apps/api/core";
-import { ArrowLeftIcon } from "./Icons";
 import { enable, disable, isEnabled } from "@tauri-apps/plugin-autostart";
 import { getVersion } from "@tauri-apps/api/app";
 
@@ -114,9 +113,6 @@ export default function Settings({ onClose, showDialog }) {
 		<div className="view-container">
 			<div className="view-header">
 				<h3>Application Settings</h3>
-				<button className="btn btn-icon-only" onClick={onClose} title="Back to Dashboard">
-					<ArrowLeftIcon size={18} />
-				</button>
 			</div>
 
 			<div className="view-content" style={{ maxWidth: '600px', margin: '0 auto', width: '100%' }}>
