@@ -14,7 +14,10 @@ export default function ServerForm({ initialData, onSave, onCancel }) {
 
 	useEffect(() => {
 		if (initialData) {
-			setFormData(initialData);
+			setFormData({
+				...initialData,
+				verbose: !!initialData.verbose // Ensure it's never undefined
+			});
 		} else {
 			// Generate a random ID for new entry or let backend handle?
 			// Let's generate a simple timestamp-based ID here for now

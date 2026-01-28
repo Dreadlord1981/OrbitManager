@@ -16,8 +16,11 @@ pub struct ServerConfig {
     pub id: String,
     pub name: String,
     pub path: String,
+    #[serde(default)]
     pub config_path: String,
+    #[serde(default)]
     pub auto_start: bool,
+    #[serde(default)]
     pub verbose: bool,
 }
 
