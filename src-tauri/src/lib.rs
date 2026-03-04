@@ -31,36 +31,22 @@ pub fn run() {
             };
 
             // Tray Setup
-            use tauri::menu::{Menu, MenuItem};
-            use tauri::tray::{MouseButton, TrayIconBuilder, TrayIconEvent};
+            update_tray_menu(app.handle());
 
-            let quit_i = MenuItem::with_id(app, "quit", "Quit", true, None::<&str>).unwrap();
-            let show_i =
-                MenuItem::with_id(app, "show", "Show Orbit Manager", true, None::<&str>).unwrap();
-            let start_all_i =
-                MenuItem::with_id(app, "start_all", "Start All Servers", true, None::<&str>)
-                    .unwrap();
-            let stop_all_i =
-                MenuItem::with_id(app, "stop_all", "Stop All Servers", true, None::<&str>).unwrap();
-            let menu =
-                Menu::with_items(app, &[&show_i, &start_all_i, &stop_all_i, &quit_i]).unwrap();
-
-            let _tray = TrayIconBuilder::with_id("tray")
+            let _tray = tauri::tray::TrayIconBuilder::with_id("tray")
                 .icon(tauri::image::Image::from_bytes(include_bytes!("../icons/icon.png")).unwrap())
                 .tooltip("Orbit Manager")
-                .menu(&menu)
                 .show_menu_on_left_click(false)
-                .on_menu_event(|app, event| match event.id.as_ref() {
-                    "quit" => {
+                .on_menu_event(|app, event| {
+                    let id = event.id.as_ref();
+                    if id == "quit" {
                         app.exit(0);
-                    }
-                    "show" => {
+                    } else if id == "show" {
                         if let Some(window) = app.get_webview_window("main") {
-                            window.show().unwrap();
-                            window.set_focus().unwrap();
+                            let _ = window.show();
+                            let _ = window.set_focus();
                         }
-                    }
-                    "start_all" => {
+                    } else if id == "start_all" {
                         let app_handle = app.clone();
                         tauri::async_runtime::spawn(async move {
                             let state = app_handle.state::<manager::ManagerState>();
@@ -78,32 +64,58 @@ pub fn run() {
                                             )
                                             .await;
                                         }
+                                        update_tray_menu(&app_handle);
                                     }
                                 }
                             }
                         });
-                    }
-                    "stop_all" => {
+                    } else if id == "stop_all" {
                         let app_handle = app.clone();
                         tauri::async_runtime::spawn(async move {
                             let state = app_handle.state::<manager::ManagerState>();
-                            // We need to collect IDs first to avoid deadlock or iteration issues if we used stop_server?
-                            // stop_server removes from map.
-                            // But we can just iterate the map keys.
                             let ids: Vec<String> = {
                                 let processes = state.processes.lock().unwrap();
                                 processes.keys().cloned().collect()
                             };
-                            for id in ids {
-                                let _ = manager::stop_server(state.clone(), id).await;
+                            for sid in ids {
+                                let _ =
+                                    manager::stop_server(app_handle.clone(), state.clone(), sid)
+                                        .await;
                             }
+                            update_tray_menu(&app_handle);
+                        });
+                    } else if id.starts_with("toggle:") {
+                        let server_id = id.replace("toggle:", "");
+                        let app_handle = app.clone();
+                        tauri::async_runtime::spawn(async move {
+                            let state = app_handle.state::<manager::ManagerState>();
+                            let running = {
+                                let processes = state.processes.lock().unwrap();
+                                processes.contains_key(&server_id)
+                            };
+
+                            if running {
+                                let _ = manager::stop_server(
+                                    app_handle.clone(),
+                                    state.clone(),
+                                    server_id,
+                                )
+                                .await;
+                            } else {
+                                let _ = manager::start_server(
+                                    app_handle.clone(),
+                                    state.clone(),
+                                    server_id,
+                                )
+                                .await;
+                            }
+                            update_tray_menu(&app_handle);
                         });
                     }
-                    _ => {}
                 })
                 .on_tray_icon_event(|tray, event| {
-                    if let TrayIconEvent::Click {
-                        button: MouseButton::Left,
+                    if let tauri::tray::TrayIconEvent::Click {
+                        button: tauri::tray::MouseButton::Left,
                         ..
                     } = event
                     {
@@ -200,4 +212,69 @@ pub fn run() {
                 }
             }
         });
+}
+
+pub fn update_tray_menu<R: tauri::Runtime>(app: &tauri::AppHandle<R>) {
+    use tauri::menu::{Menu, MenuItem, PredefinedMenuItem, Submenu};
+
+    let show_i = MenuItem::with_id(app, "show", "Show Orbit Manager", true, None::<&str>).unwrap();
+    let start_all_i =
+        MenuItem::with_id(app, "start_all", "Start All Servers", true, None::<&str>).unwrap();
+    let stop_all_i =
+        MenuItem::with_id(app, "stop_all", "Stop All Servers", true, None::<&str>).unwrap();
+    let quit_i = MenuItem::with_id(app, "quit", "Quit", true, None::<&str>).unwrap();
+    let sep = PredefinedMenuItem::separator(app).unwrap();
+
+    // Servers Submenu
+    let state = app.state::<manager::ManagerState>();
+    let servers_path = manager::get_servers_path(app);
+    let mut server_items: Vec<Box<dyn tauri::menu::IsMenuItem<R>>> = Vec::new();
+
+    if servers_path.exists() {
+        if let Ok(content) = std::fs::read_to_string(&servers_path) {
+            if let Ok(servers) = serde_json::from_str::<Vec<manager::ServerConfig>>(&content) {
+                let processes = state.processes.lock().unwrap();
+                for server in servers {
+                    let running = processes.contains_key(&server.id);
+                    let label = format!("{} {}", if running { "●" } else { "○" }, server.name);
+                    let item = MenuItem::with_id(
+                        app,
+                        format!("toggle:{}", server.id),
+                        label,
+                        true,
+                        None::<&str>,
+                    )
+                    .unwrap();
+                    server_items.push(Box::new(item));
+                }
+            }
+        }
+    }
+
+    let servers_submenu = Submenu::with_items(
+        app,
+        "Servers",
+        true,
+        &server_items.iter().map(|i| i.as_ref()).collect::<Vec<_>>(),
+    )
+    .unwrap();
+
+    let menu = Menu::with_items(
+        app,
+        &[
+            &show_i,
+            &sep,
+            &start_all_i,
+            &stop_all_i,
+            &sep,
+            &servers_submenu,
+            &sep,
+            &quit_i,
+        ],
+    )
+    .unwrap();
+
+    if let Some(tray) = app.tray_by_id("tray") {
+        let _ = tray.set_menu(Some(menu));
+    }
 }

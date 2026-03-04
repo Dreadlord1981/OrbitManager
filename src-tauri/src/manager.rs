@@ -311,6 +311,7 @@ pub async fn save_server<R: Runtime>(
 
     let json = serde_json::to_string_pretty(&servers).map_err(|e| e.to_string())?;
     fs::write(&path, json).map_err(|e| e.to_string())?;
+    crate::update_tray_menu(&app);
     Ok(())
 }
 
@@ -330,6 +331,7 @@ pub async fn delete_server<R: Runtime>(app: AppHandle<R>, id: String) -> Result<
     let json = serde_json::to_string_pretty(&servers).map_err(|e| e.to_string())?;
     fs::write(&path, json).map_err(|e| e.to_string())?;
 
+    crate::update_tray_menu(&app);
     Ok(())
 }
 
@@ -436,6 +438,7 @@ pub async fn start_server<R: Runtime>(
             "server-status",
             serde_json::json!({ "id": id_clone, "status": "stopped" }),
         );
+        crate::update_tray_menu(&app_handle);
     });
 
     let id_clone_err = id.clone();
@@ -468,18 +471,28 @@ pub async fn start_server<R: Runtime>(
     )
     .unwrap();
 
+    crate::update_tray_menu(&app);
     Ok(())
 }
 
 #[tauri::command]
-pub async fn stop_server(state: tauri::State<'_, ManagerState>, id: String) -> Result<(), String> {
-    let mut processes = state.processes.lock().unwrap();
-    if let Some(mut child) = processes.remove(&id) {
-        child.kill().map_err(|e| e.to_string())?;
-        // Waiting might block, so maybe don't wait in this thread?
-        // But kill() is usually async-ish in effect.
-        // We removed it from the map so we consider it stopped.
-        // The threads reading stdout will finish when pipe closes.
+pub async fn stop_server<R: tauri::Runtime>(
+    app: tauri::AppHandle<R>,
+    state: tauri::State<'_, ManagerState>,
+    id: String,
+) -> Result<(), String> {
+    let child = {
+        let mut processes = state.processes.lock().unwrap();
+        processes.remove(&id)
+    };
+
+    if let Some(mut child) = child {
+        let _ = child.kill();
+        let _ = app.emit(
+            "server-status",
+            serde_json::json!({ "id": id, "status": "stopped" }),
+        );
+        crate::update_tray_menu(&app);
     } else {
         return Err("Server not running".to_string());
     }
