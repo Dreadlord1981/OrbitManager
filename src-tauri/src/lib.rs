@@ -215,7 +215,7 @@ pub fn run() {
 }
 
 pub fn update_tray_menu<R: tauri::Runtime>(app: &tauri::AppHandle<R>) {
-    use tauri::menu::{Menu, MenuItem, PredefinedMenuItem, Submenu};
+    use tauri::menu::{IconMenuItem, Menu, MenuItem, PredefinedMenuItem, Submenu};
 
     let show_i = MenuItem::with_id(app, "show", "Show Orbit Manager", true, None::<&str>).unwrap();
     let start_all_i =
@@ -224,6 +224,12 @@ pub fn update_tray_menu<R: tauri::Runtime>(app: &tauri::AppHandle<R>) {
         MenuItem::with_id(app, "stop_all", "Stop All Servers", true, None::<&str>).unwrap();
     let quit_i = MenuItem::with_id(app, "quit", "Quit", true, None::<&str>).unwrap();
     let sep = PredefinedMenuItem::separator(app).unwrap();
+
+    // Icons
+    let active_icon =
+        tauri::image::Image::from_bytes(include_bytes!("../icons/active.png")).unwrap();
+    let inactive_icon =
+        tauri::image::Image::from_bytes(include_bytes!("../icons/inactive.png")).unwrap();
 
     // Servers Submenu
     let state = app.state::<manager::ManagerState>();
@@ -236,12 +242,17 @@ pub fn update_tray_menu<R: tauri::Runtime>(app: &tauri::AppHandle<R>) {
                 let processes = state.processes.lock().unwrap();
                 for server in servers {
                     let running = processes.contains_key(&server.id);
-                    let label = format!("{} {}", if running { "●" } else { "○" }, server.name);
-                    let item = MenuItem::with_id(
+                    let icon = if running {
+                        Some(active_icon.clone())
+                    } else {
+                        Some(inactive_icon.clone())
+                    };
+                    let item = IconMenuItem::with_id(
                         app,
                         format!("toggle:{}", server.id),
-                        label,
+                        &server.name,
                         true,
+                        icon,
                         None::<&str>,
                     )
                     .unwrap();
