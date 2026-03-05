@@ -153,8 +153,13 @@ export default function Dashboard({ onAdd, onEdit, onCopy, onViewLogs, onEditCon
 									{server.name}
 								</div>
 								<div className="server-details">{server.path}</div>
-								{server.running && server.address && server.address !== "—" && (
-									<div className="server-details" style={{ color: 'var(--success-color)', opacity: 1, fontWeight: 700, marginTop: '4px' }}>
+								{server.address && server.address !== "—" && (
+									<div className="server-details" style={{ 
+										color: server.running ? 'var(--success-color)' : 'var(--text-secondary)', 
+										opacity: server.running ? 1 : 0.7, 
+										fontWeight: server.running ? 700 : 400, 
+										marginTop: '4px' 
+									}}>
 										{server.address}
 									</div>
 								)}
