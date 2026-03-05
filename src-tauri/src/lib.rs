@@ -12,6 +12,13 @@ pub fn run() {
                 .app_name("Orbit Manager")
                 .build(),
         )
+        .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
+            let _ = app
+                .get_webview_window("main")
+                .expect("no main window")
+                .show()
+                .and_then(|_| app.get_webview_window("main").unwrap().set_focus());
+        }))
         .manage(manager::ManagerState::new())
         .setup(|app| {
             // Read settings to check start_hidden
