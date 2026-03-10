@@ -87,7 +87,6 @@ export default function ConfigEditor({
                 address: "string",
                 https: "boolean",
                 strip: "boolean",
-                match: "string",
                 watch: "boolean",
             },
         };
@@ -347,7 +346,6 @@ export default function ConfigEditor({
                             prop("address", 'address = "${1}"', "c");
                             prop("https", "https = ${1:false}", "d");
                             prop("strip", "strip = ${1:false}", "e");
-                            prop("match", 'match = "${1}"', "f");
                             prop("watch", "watch = ${1:true}", "g");
                         }
                     }
