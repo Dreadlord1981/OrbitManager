@@ -1,17 +1,17 @@
-# Set default behavior to handle all files as text and normalize to LF on commit
-* text=auto eol=lf
+# Set default behavior to handle all files as text and normalize to CRLF on checkout
+* text=auto eol=crlf
 
 # Explicitly declare text files that should always have LF
-*.js text eol=lf
-*.jsx text eol=lf
-*.ts text eol=lf
-*.tsx text eol=lf
-*.rs text eol=lf
-*.toml text eol=lf
-*.json text eol=lf
-*.html text eol=lf
-*.css text eol=lf
-*.md text eol=lf
+*.js text eol=crlf
+*.jsx text eol=crlf
+*.ts text eol=crlf
+*.tsx text eol=crlf
+*.rs text eol=crlf
+*.toml text eol=crlf
+*.json text eol=crlf
+*.html text eol=crlf
+*.css text eol=crlf
+*.md text eol=crlf
 
 # Denote all files that are truly binary and or should not be modified
 *.png binary
