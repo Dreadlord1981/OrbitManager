@@ -1,6 +1,7 @@
 mod manager;
 
 use tauri::Manager;
+use tauri_plugin_notification::NotificationExt;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -19,6 +20,7 @@ pub fn run() {
                 .show()
                 .and_then(|_| app.get_webview_window("main").unwrap().set_focus());
         }))
+        .plugin(tauri_plugin_notification::init())
         .manage(manager::ManagerState::new())
         .setup(|app| {
             // Read settings to check start_hidden
@@ -72,6 +74,7 @@ pub fn run() {
                                             .await;
                                         }
                                         update_tray_menu(&app_handle);
+                                        let _ = app_handle.notification().builder().title("Orbit Manager").body("All Servers Started").show();
                                     }
                                 }
                             }
@@ -90,6 +93,7 @@ pub fn run() {
                                         .await;
                             }
                             update_tray_menu(&app_handle);
+                            let _ = app_handle.notification().builder().title("Orbit Manager").body("All Servers Stopped").show();
                         });
                     } else if id.starts_with("toggle:") {
                         let server_id = id.replace("toggle:", "");
@@ -101,22 +105,47 @@ pub fn run() {
                                 processes.contains_key(&server_id)
                             };
 
-                            if running {
+                            let new_running = if running {
                                 let _ = manager::stop_server(
                                     app_handle.clone(),
                                     state.clone(),
-                                    server_id,
+                                    server_id.clone(),
                                 )
                                 .await;
+                                false
                             } else {
                                 let _ = manager::start_server(
                                     app_handle.clone(),
                                     state.clone(),
-                                    server_id,
+                                    server_id.clone(),
                                 )
                                 .await;
+                                true
+                            };
+
+                            // Get server name for notification
+                            let mut server_name = "Server".to_string();
+                            let path = manager::get_servers_path(&app_handle);
+                            if let Ok(content) = std::fs::read_to_string(&path) {
+                                if let Ok(servers) =
+                                    serde_json::from_str::<Vec<manager::ServerConfig>>(&content)
+                                {
+                                    if let Some(s) = servers.into_iter().find(|s| s.id == server_id)
+                                    {
+                                        server_name = s.name;
+                                    }
+                                }
                             }
+
                             update_tray_menu(&app_handle);
+
+                            let status_text = if new_running { "Started" } else { "Stopped" };
+                            let _ = app_handle
+                                .notification()
+                                .builder()
+                                .title("Orbit Manager")
+                                .body(format!("{} {}", server_name, status_text))
+                                .show();
                         });
                     }
                 })
