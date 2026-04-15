@@ -40,11 +40,12 @@ pub fn run() {
             };
 
             // Tray Setup
-            update_tray_menu(app.handle());
+            let tray_menu = build_tray_menu(app.handle());
 
             let _tray = tauri::tray::TrayIconBuilder::with_id("tray")
                 .icon(tauri::image::Image::from_bytes(include_bytes!("../icons/icon.png")).unwrap())
                 .tooltip("Orbit Manager")
+                .menu(&tray_menu)
                 .show_menu_on_left_click(false)
                 .on_menu_event(|app, event| {
                     let id = event.id.as_ref();
@@ -251,13 +252,17 @@ pub fn run() {
 }
 
 pub fn update_tray_menu<R: tauri::Runtime>(app: &tauri::AppHandle<R>) {
+    let menu = build_tray_menu(app);
+
+    if let Some(tray) = app.tray_by_id("tray") {
+        let _ = tray.set_menu(Some(menu));
+    }
+}
+
+fn build_tray_menu<R: tauri::Runtime>(app: &tauri::AppHandle<R>) -> tauri::menu::Menu<R> {
     use tauri::menu::{IconMenuItem, Menu, MenuItem, PredefinedMenuItem, Submenu};
 
     let show_i = MenuItem::with_id(app, "show", "Show Orbit Manager", true, None::<&str>).unwrap();
-    let start_all_i =
-        MenuItem::with_id(app, "start_all", "Start All Servers", true, None::<&str>).unwrap();
-    let stop_all_i =
-        MenuItem::with_id(app, "stop_all", "Stop All Servers", true, None::<&str>).unwrap();
     let quit_i = MenuItem::with_id(app, "quit", "Quit", true, None::<&str>).unwrap();
     let sep = PredefinedMenuItem::separator(app).unwrap();
 
@@ -271,10 +276,12 @@ pub fn update_tray_menu<R: tauri::Runtime>(app: &tauri::AppHandle<R>) {
     let state = app.state::<manager::ManagerState>();
     let servers_path = manager::get_servers_path(app);
     let mut server_items: Vec<Box<dyn tauri::menu::IsMenuItem<R>>> = Vec::new();
+    let mut has_servers = false;
 
     if servers_path.exists() {
         if let Ok(content) = std::fs::read_to_string(&servers_path) {
             if let Ok(servers) = serde_json::from_str::<Vec<manager::ServerConfig>>(&content) {
+                has_servers = !servers.is_empty();
                 let processes = state.processes.lock().unwrap();
                 for server in servers {
                     let running = processes.contains_key(&server.id);
@@ -298,15 +305,32 @@ pub fn update_tray_menu<R: tauri::Runtime>(app: &tauri::AppHandle<R>) {
         }
     }
 
+    let start_all_i = MenuItem::with_id(
+        app,
+        "start_all",
+        "Start All Servers",
+        has_servers,
+        None::<&str>,
+    )
+    .unwrap();
+    let stop_all_i = MenuItem::with_id(
+        app,
+        "stop_all",
+        "Stop All Servers",
+        has_servers,
+        None::<&str>,
+    )
+    .unwrap();
+
     let servers_submenu = Submenu::with_items(
         app,
         "Servers",
-        true,
+        has_servers,
         &server_items.iter().map(|i| i.as_ref()).collect::<Vec<_>>(),
     )
     .unwrap();
 
-    let menu = Menu::with_items(
+    Menu::with_items(
         app,
         &[
             &show_i,
@@ -319,9 +343,5 @@ pub fn update_tray_menu<R: tauri::Runtime>(app: &tauri::AppHandle<R>) {
             &quit_i,
         ],
     )
-    .unwrap();
-
-    if let Some(tray) = app.tray_by_id("tray") {
-        let _ = tray.set_menu(Some(menu));
-    }
+    .unwrap()
 }
