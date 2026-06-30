@@ -35,9 +35,6 @@ pub struct AppSettings {
 
 // We need a thread-safe way to store children.
 // Tauri State is global.
-// We can use Arc<Mutex<HashMap<String, std::process::Child>>>.
-// But `Child` doesn't implement some traits? No, it should be fine in a Mutex.
-
 pub struct ManagerState {
     pub processes: Arc<Mutex<HashMap<String, std::process::Child>>>,
 }
@@ -218,6 +215,55 @@ fn get_bin_path<R: Runtime>(app: &AppHandle<R>) -> PathBuf {
         .unwrap()
 }
 
+fn get_server_executable_path<R: Runtime>(app: &AppHandle<R>) -> Result<PathBuf, String> {
+    let bin_path = get_bin_path(app);
+    let a_candidate_names = if cfg!(target_os = "windows") {
+        let mut a_names = Vec::new();
+
+        if cfg!(target_arch = "x86_64") {
+            a_names.push("iceserver-x86_64-pc-windows-msvc.exe".to_string());
+        } else if cfg!(target_arch = "aarch64") {
+            a_names.push("iceserver-aarch64-pc-windows-msvc.exe".to_string());
+        } else if cfg!(target_arch = "x86") {
+            a_names.push("iceserver-i686-pc-windows-msvc.exe".to_string());
+        }
+
+        a_names
+    } else if cfg!(target_os = "macos") {
+        let mut a_names = Vec::new();
+
+        if cfg!(target_arch = "x86_64") {
+            a_names.push("iceserver-x86_64-apple-darwin".to_string());
+        } else if cfg!(target_arch = "aarch64") {
+            a_names.push("iceserver-aarch64-apple-darwin".to_string());
+        }
+
+        a_names
+    } else {
+        Vec::new()
+    };
+
+    for s_candidate_name in a_candidate_names {
+        let i_candidate_path = bin_path.join(&s_candidate_name);
+        if i_candidate_path.exists() {
+            return Ok(i_candidate_path);
+        }
+    }
+
+    Err(format!(
+        "No server executable found in {}",
+        bin_path.display()
+    ))
+}
+
+pub fn stop_all_processes(state: &ManagerState) {
+    let mut processes = state.processes.lock().unwrap();
+
+    for (_, mut child) in processes.drain() {
+        let _ = child.kill();
+    }
+}
+
 // Get the server address (localhost:port) from config file
 fn get_server_address(config: &ServerConfig) -> String {
     let config_path = get_config_full_path(config);
@@ -360,34 +406,27 @@ pub async fn start_server<R: Runtime>(
 
     // 2. Check if running
     {
-        let mut processes = state.processes.lock().unwrap();
+        let processes = state.processes.lock().unwrap();
         if processes.contains_key(&id) {
-            // Check if it's actually alive?
-            // Child::try_wait() can check.
-            if let Some(child) = processes.get_mut(&id) {
-                if let Ok(None) = child.try_wait() {
-                    return Err("Server already running".to_string());
-                }
-                // If it finished, remove it.
-                processes.remove(&id);
-            }
+            return Err("Server already running".to_string());
         }
     }
 
     // 3. Start Process
-    let bin_path = get_bin_path(&app);
-    let exe_path = bin_path.join("iceserver.exe");
-
-    // Prepare command
-    let mut cmd = Command::new(exe_path);
-
+    let exe_path = get_server_executable_path(&app)?;
     let config_path = expand_path(&config.path);
-
     let mut config_path = PathBuf::from(&config_path);
 
     if !config.config_path.is_empty() {
         config_path = config_path.join(&config.config_path);
     }
+
+    let log_path = get_log_path(config, &app);
+    let log_path_err = log_path.clone();
+    let app_handle = app.clone();
+    let id_clone = id.clone();
+
+    let mut cmd = Command::new(exe_path);
 
     cmd.arg("-r").arg(&config_path);
 
@@ -407,14 +446,12 @@ pub async fn start_server<R: Runtime>(
 
     let mut child = cmd.spawn().map_err(|e| format!("Failed to spawn: {}", e))?;
 
-    // 4. Stream output
     let stdout = child.stdout.take().unwrap();
     let stderr = child.stderr.take().unwrap();
-    let id_clone = id.clone();
-    let app_handle = app.clone();
+    let id_clone_err = id.clone();
+    let app_handle_err = app.clone();
 
-    let log_path = get_log_path(config, &app);
-    let log_path_err = log_path.clone();
+    state.processes.lock().unwrap().insert(id.clone(), child);
 
     thread::spawn(move || {
         let mut log_file = OpenOptions::new()
@@ -441,8 +478,6 @@ pub async fn start_server<R: Runtime>(
         crate::update_tray_menu(&app_handle);
     });
 
-    let id_clone_err = id.clone();
-    let app_handle_err = app.clone();
     thread::spawn(move || {
         let mut log_file = OpenOptions::new()
             .create(true)
@@ -462,8 +497,6 @@ pub async fn start_server<R: Runtime>(
             );
         }
     });
-
-    state.processes.lock().unwrap().insert(id.clone(), child);
 
     app.emit(
         "server-status",

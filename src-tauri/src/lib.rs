@@ -75,7 +75,12 @@ pub fn run() {
                                             .await;
                                         }
                                         update_tray_menu(&app_handle);
-                                        let _ = app_handle.notification().builder().title("Orbit Manager").body("All Servers Started").show();
+                                        let _ = app_handle
+                                            .notification()
+                                            .builder()
+                                            .title("Orbit Manager")
+                                            .body("All Servers Started")
+                                            .show();
                                     }
                                 }
                             }
@@ -94,7 +99,12 @@ pub fn run() {
                                         .await;
                             }
                             update_tray_menu(&app_handle);
-                            let _ = app_handle.notification().builder().title("Orbit Manager").body("All Servers Stopped").show();
+                            let _ = app_handle
+                                .notification()
+                                .builder()
+                                .title("Orbit Manager")
+                                .body("All Servers Stopped")
+                                .show();
                         });
                     } else if id.starts_with("toggle:") {
                         let server_id = id.replace("toggle:", "");
@@ -243,10 +253,7 @@ pub fn run() {
             if let tauri::RunEvent::ExitRequested { .. } = event {
                 // Graceful shutdown
                 let state = app_handle.state::<manager::ManagerState>();
-                let mut processes = state.processes.lock().unwrap();
-                for (_, child) in processes.iter_mut() {
-                    let _ = child.kill();
-                }
+                manager::stop_all_processes(&state);
             }
         });
 }
